@@ -51,13 +51,10 @@ Advanced Options -> A6 Wayland -> W1 X11	# Activate X11 to enable the app GUI fo
 **PDP11/70 emulator and cool-retro-term [23] running 2.11BSD UNIX on a LINUX Ubuntu system**
 
 <img src="https://hotto.de/wp-content/uploads/2025/04/PDP1170_211BSD.jpg" width="500"/>
-<br/><br/>
 
-<video width="500" controls>
-  <source src="https://hotto.de/wp-content/uploads/2025/04/PDP1170_211BSD.webm" type="video/webm">  
-</video>
 
 **Remote Raspberry PI access via MobaXterm [21] on Windows 11 using SSH and X11 forwarding**
+
 <img src="https://hotto.de/wp-content/uploads/2025/04/PDP1170_211BSD_MobaXterm.jpg" width="500"/>
 
 

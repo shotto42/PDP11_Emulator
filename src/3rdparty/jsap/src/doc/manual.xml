@@ -1,0 +1,929 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+<book>
+  <title>JSAP - Java Simple Argument Parser (v2.1)</title>
+
+  <preface>
+    <title>Formalities</title>
+
+    <para>This document is current as of August 3, 2006. The most up-to-date
+    copy of this document is available at <ulink
+    url="http://www.martiansoftware.com/jsap/doc/index.html">http://www.martiansoftware.com/jsap/doc/index.html</ulink>.</para>
+
+    <para>Copyright (c) 2004-2006, <ulink
+    url="http://www.martiansoftware.com/contact.html">Marty Lamb</ulink>. This
+    document is licensed under a <ulink
+    url="http://creativecommons.org/licenses/by-sa/1.0/">Creative Commons
+    License</ulink>.</para>
+
+    <section>
+      <title>License</title>
+
+      <para>JSAP is licensed under the Lesser GNU Public License. A copy of
+      this license is available at <ulink
+      url="http://www.fsf.org/licenses/licenses.html#LGPL">http://www.fsf.org/licenses/licenses.html#LGPL</ulink>.</para>
+
+      <note>
+        <para>There has been much discussion recently regarding the LGPL and
+        Java-based projects. As a result, the following LGPL clarification
+        applies (based upon a similar clarification at <ulink
+        url="http://www.hibernate.org">http://www.hibernate.org</ulink>):</para>
+
+        <para>JSAP is Free Software. The LGPL license is sufficiently flexible
+        to allow the use of JSAP in both open source and commercial projects.
+        Using JSAP (by importing JSAP&#39;s public interfaces in your Java
+        code), and extending JSAP (by subclassing) are considered by the
+        authors of JSAP to be dynamic linking. Hence our interpretation of the
+        LGPL is that the use of the unmodified JSAP source or binary, or the
+        rebundling of unmodified JSAP classes into your program&#39;s .jar
+        file, does not affect the license of your application code.</para>
+
+        <para>If you modify JSAP and redistribute your modifications, you must
+        also distribute your modifications as specified by the LGPL applies.</para>
+
+        <para>Other licensing terms may be obtained by contacting Martian
+        Software.</para>
+      </note>
+    </section>
+  </preface>
+
+  <chapter>
+    <title>Introduction</title>
+
+    <sect1>
+      <title>Why did you write another command line parser?</title>
+
+      <para>Put simply, I got tired of writing simple command line parsers for
+      every java utility program I wrote. I wanted a simple tool that would
+      support complex command lines - and return more than just
+      <classname>String</classname>s. If one of the options for a program, for
+      example, is a number, it should be retrievable by the program AS a
+      number. <classname>JSAP</classname> does this, and allows developers to
+      add new command line data types as needed.</para>
+
+      <para>I also wanted the ability to read default values from a
+      configuration file, which could be overridden by the command line.
+      <classname>JSAP</classname> supports this, and in fact supports
+      multiple, &#34;cascading&#34; configuration files as well.</para>
+    </sect1>
+
+    <sect1>
+      <title>So what does JSAP actually do?</title>
+
+      <para><classname>JSAP</classname> parses your command line and
+      instantiates objects of types you specify based upon that command line.
+      If you configure <classname>JSAP</classname> to expect an
+      <classname>Integer</classname> on the command line, and the user does
+      not provide a <classname>String</classname> that can be converted to an
+      <classname>Integer</classname>, <classname>JSAP</classname> will alert
+      your program to the fact that there was a problem with the command line.
+      If <classname>JSAP</classname> indicates that your command line was
+      successfully parsed, you are guaranteed an <classname>Integer</classname>
+      when you request that parameter&#39;s value from your program.
+      There&#39;s a pretty big (and growing) list of return types suppored by
+      <classname>JSAP</classname>; you may want to <ulink
+      url="javadoc/com/martiansoftware/jsap/stringparsers/package-summary.html">skip
+      right to the javadocs</ulink> and check it out.</para>
+
+      <para><classname>JSAP</classname> provides not only for default values
+      for its parameters, but for a cascading chain of values. With a couple
+      extra lines of code, <classname>JSAP</classname> will, for example:</para>
+
+      <procedure>
+        <step>
+          <para>Parse the command line.</para>
+        </step>
+
+        <step>
+          <para>For any omitted parameters, look for values in
+          ~/.yourProgramName.conf</para>
+        </step>
+
+        <step>
+          <para>For any still omitted parameters, look for values in
+          /etc/yourProgramName.conf</para>
+        </step>
+
+        <step>
+          <para>For any still omitted parameters, use the default values (if
+          any) specified by the developer.</para>
+        </step>
+      </procedure>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title>Vocabulary</title>
+
+    <para>Before continuing, some explanation of the vocabulary used in this
+    manual is required:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term>Argument</term>
+
+        <listitem>
+          <para>A single (<classname>String</classname>) token from the
+          command line. The JVM will provide an array of these to your
+          <methodname>main()</methodname> method.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Parameter</term>
+
+        <listitem>
+          <para>One or more arguments that must be taken together to have
+          meaning. For example, in the command &#34;<command>java -cp
+          myjar.jar MyClass</command>&#34;, the arguments &#34;<command>-cp</command>&#34;
+          and &#34;<command>myjar.jar</command>&#34; comprise a single
+          parameter defining the classpath. The argument &#34;<command>MyClass</command>&#34;
+          comprises another parameter indicating the class to load and run.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Switch</term>
+
+        <listitem>
+          <para>A single-argument parameter whose presence alone conveys
+          meaning. For example, in the command &#34;<command>java -version</command>&#34;,
+          the &#34;<command>-version</command>&#34; switch tells the JVM to
+          print its version information and exit.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Option</term>
+
+        <listitem>
+          <para>A parameter whose content conveys meaning. In the command
+          &#34;<command>java -cp myjar.jar MyClass</command>&#34;, the &#34;<command>-cp
+          myjar.jar</command>&#34; parameter is an option, as is the &#34;<command>MyClass</command>&#34;
+          parameter.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Flagged Option</term>
+
+        <listitem>
+          <para>An option that is preceded by a &#34;flag&#34; to indicate
+          which option is being set. In the command &#34;<command>java -cp
+          myjar.jar MyClass</command>&#34;, the &#34;<command>-cp myjar.jar</command>&#34;
+          option is flagged by &#34;<command>-cp</command>&#34;.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Unflagged Option</term>
+
+        <listitem>
+          <para>An option that is not preceded by a flag, and whose meaning is
+          conveyed by its position in the command line relative to other
+          Unflagged Options. In the command &#34;<command>java -cp myjar.jar
+          MyClass</command>&#34;, &#34;<command>MyClass</command>&#34; is an
+          unflagged option.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>QualifiedSwitch</term>
+
+        <listitem>
+          <para>A combination of <classname>Switch</classname> and
+          <classname>FlaggedOption</classname>. It serves the same function as
+          a <classname>Switch</classname> on a command line, but it may be
+          &#34;qualified&#34; with additional data following a colon. In the
+          commands &#34;<command>java -verbose MyClass</command>&#34; and
+          &#34;<command>java -verbose:class MyClass</command>&#34;, &#34;<command>verbose</command>&#34;
+          is a <classname>QualifiedSwitch</classname> qualified by the
+          &#34;class&#34; qualifier in the second example.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Short Flag</term>
+
+        <listitem>
+          <para>A single-character flag preceded by a single dash.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Long Flag</term>
+
+        <listitem>
+          <para>A multi-character flag preceded by a double dash.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>ID</term>
+
+        <listitem>
+          <para>A unique identifier assigned by the programmer to each
+          parameter <classname>JSAP</classname> should recognize. A
+          parameter&#39;s ID is seen only by the programmer, and is used to
+          retrieve its values from the <classname>JSAPResult</classname>
+          object.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </chapter>
+
+  <chapter>
+    <title>Quick Start</title>
+
+    <para>If you&#39;re the type of developer who likes to take a quick look
+    at example code and tweak it for your needs, this chapter should get you
+    up and running with <classname>JSAP</classname> very quickly. We&#39;ll
+    start with a simple example and gradually build upon it in order to
+    demonstrate some of the basic features of <classname>JSAP</classname>.
+    You&#39;ll have to read further for some of the more interesting features,
+    or you can <ulink url="javadoc/index.html">dive straight into the javadocs</ulink>.</para>
+
+    <sect1>
+      <title>HelloWorld_1</title>
+
+      <para>Everyone else begins with a &#34;Hello, World!&#34; program, so we
+      will, too.</para>
+
+      <programlisting>@Manual_HelloWorld_1@</programlisting>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_1@@</screen>
+
+      <para>Not only is this completely uninteresting, but it doesn&#39;t use
+      <classname>JSAP</classname>. Let&#39;s tweak it a little.</para>
+    </sect1>
+
+    <sect1>
+      <title>HelloWorld_2</title>
+
+      <programlisting>@Manual_HelloWorld_2@</programlisting>
+
+      <para>That&#39;s pretty verbose. Later on you&#39;ll see ways to trim
+      this down quite a bit. Here&#39;s what&#39;s going on:</para>
+
+      <procedure>
+        <step>
+          <para>We create a new <classname>JSAP</classname> to do the parsing.</para>
+        </step>
+
+        <step>
+          <para>We create a new <classname>FlaggedOption</classname> so we can
+          tell the program how many times to print the message.</para>
+
+          <procedure>
+            <step>
+              <para>It has an ID of &#34;count&#34;, which is only used
+              internally by our program to retrieve the value.</para>
+            </step>
+
+            <step>
+              <para>It&#39;s using an <classname>IntegerStringParser</classname>
+              to convert the value to an <classname>Integer</classname>, and
+              it has a default value of 1.</para>
+            </step>
+
+            <step>
+              <para>It&#39;s required, but since we&#39;re specifying a
+              default value, the requirement will always be met.</para>
+            </step>
+
+            <step>
+              <para>It has a short flag &#34;<command>n</command>&#34;, so the
+              syntax is &#34;<command>-n 5</command>&#34; to print the message
+              five times, for example.</para>
+            </step>
+
+            <step>
+              <para>It has no long flag.</para>
+            </step>
+          </procedure>
+        </step>
+
+        <step>
+          <para>We register the flagged option with the parser we created in
+          the beginning.</para>
+        </step>
+
+        <step>
+          <para>We tell the parser to parse the command line arguments, and
+          store the result in a variable called &#34;config&#34;.</para>
+        </step>
+
+        <step>
+          <para>We print the message.</para>
+        </step>
+      </procedure>
+
+      <para>The output of the program looks like this:</para>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_2@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_2 -n 5@@</screen>
+
+      <para>So far, so good. Let&#39;s add a switch.</para>
+    </sect1>
+
+    <sect1>
+      <title>HelloWorld_3</title>
+
+      <programlisting>@Manual_HelloWorld_3@</programlisting>
+
+      <para>What did we do? We created a new <classname>Switch</classname> to
+      determine how verbose we&#39;re going to be with our greeting,
+      registered it with <classname>JSAP</classname>, and read its value
+      inside the print loop. That might still seem like a lot of code for this
+      little feature, but let&#39;s look at all the ways we can invoke the
+      program now:</para>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_3 -n 2@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_3 -n 3 -v@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_3 --verbose@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_3 -vn 2@@</screen>
+
+      <para>That last one is the most interesting - note that we were able to
+      combine multiple short flags (&#34;<command>v</command>&#34; and &#34;<command>n</command>&#34;).
+      <classname>JSAP</classname> allows this for as many short flags as you
+      want - provided that at most one of them is an <classname>Option</classname>
+      (as opposed to a <classname>Switch</classname>) and it&#39;s the last
+      one in the list.</para>
+
+      <para>For the next example, we&#39;ll use an unflagged option to specify
+      to whom we really want to say hello. It will be optional, defaulting to
+      &#34;World&#34; for backwards compatibility with our earlier examples.
+      :) We&#39;ll also make it greedy, so it consumes the rest of the command
+      line to allow multiple values.</para>
+    </sect1>
+
+    <sect1>
+      <title>HelloWorld_4</title>
+
+      <para>Here we&#39;ve added an <classname>UnflaggedOption</classname> to
+      greet specific names. It&#39;s marked as &#34;greedy&#34;, so any number
+      of names on the command line are associated with this option.</para>
+
+      <programlisting>@Manual_HelloWorld_4@</programlisting>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_4 -n 2 --verbose Bender Fry Leela@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_4 Kif -n 3@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_4 -v -n 2@@</screen>
+    </sect1>
+
+    <sect1>
+      <title>HelloWorld_5</title>
+
+      <para>All or the previous examples showed command lines flawlessly typed
+      by the user. This, of course, never happens. One way to handle this is
+      to print usage information:</para>
+
+      <programlisting>@Manual_HelloWorld_5@</programlisting>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_5 -n 2 -n 4@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_5 --nosuchflag@@</screen>
+
+      <para>Note that the IDs of the &#34;count&#34; <classname>FlaggedOption</classname>
+      and the &#34;name&#34; <classname>UnflaggedOption</classname> were used
+      in the automatically-generated usage information. As of v1.4, this can
+      be overridden via <function>setUsageName(<classname>String</classname>)</function>
+      on any parameters. (Thanks to Andreas Hochsteger for the suggestion!)</para>
+    </sect1>
+
+    <sect1>
+      <title>HelloWorld_6</title>
+
+      <para>Of course, sometimes usage information doesn&#39;t provide enough
+      detail. How about some actual program help?</para>
+
+      <programlisting>@Manual_HelloWorld_6@</programlisting>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_6 -n 2 -n 4@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_6 --nosuchflag@@</screen>
+
+      <para>In <classname>HelloWorld_3</classname> you learned how to add a
+      <classname>Switch</classname> (verbose). Combine a -h / --help switch
+      with the <methodname>getHelp()</methodname> method as used here, and
+      you&#39;ve made your program much friendlier.</para>
+    </sect1>
+
+    <sect1>
+      <title>HelloWorld_7</title>
+
+      <para>Showing the expected input of your program can be helpful, but it
+      can be even more helpful to tell the user specifically what they did
+      wrong. It&#39;s pretty easy as of version 1.03:</para>
+
+      <programlisting>@Manual_HelloWorld_7@</programlisting>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_7 -n 2 -n 4@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_7 --nosuchflag@@</screen>
+    </sect1>
+
+    <sect1>
+      <title><anchor id="HelloWorld_8" />HelloWorld_8</title>
+
+      <para>The following example uses a <classname>QualifiedSwitch</classname>
+      to allow the user to specify the language(s) to use in verbose mode.</para>
+
+      <programlisting>@Manual_HelloWorld_8@</programlisting>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_8 -n 2 --verbose Zoidberg@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_8 --verbose:de Farnsworth@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_8 -v:de,en Branigan@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_8 Horrible_Gelatanous_Blob@@
+</screen>
+
+      <para></para>
+    </sect1>
+
+    <sect1>
+      <title><anchor id="HelloWorld_Simple" />HelloWorld_Simple</title>
+
+      <para>If you want to minimize the amount of code handling the command
+      line, JSAP offers a <classname>SimpleJSAP</classname> that does most of
+      the work for you. An instance of <classname>SimpleJSAP</classname> works
+      much like an instance of <classname>JSAP</classname>, but it accepts a
+      command name, a command explanation, and an array of
+      <classname>Parameter</classname> objects (there are several constructors
+      that should cover most of the common cases, but you can also
+      chain-invoke setters). If parsing fails for any reason, or if
+      <literal>--help</literal> is specified, the user is fully informed, and
+      the method <methodname>messagePrinted()</methodname> will return true.</para>
+
+      <programlisting>@Manual_HelloWorld_Simple@</programlisting>
+
+      <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_Simple -n 2 --verbose Zoidberg@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_Simple --verbose:de Farnsworth@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_Simple -v:de,en Branigan@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_Simple Horrible_Gelatanous_Blob@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_Simple --help@@
+</screen>
+
+      <para></para>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title>How It Works</title>
+
+    <para>Everything you do with <classname>JSAP</classname> leads to the same
+    goal: a <classname>JSAPResult</classname> object that contains objects
+    created from the parsed command line. Getting to this point requires the
+    following steps:</para>
+
+    <sect1>
+      <title>Creating a JSAP to do the parsing.</title>
+
+      <para>This is generally accomplished through <classname>JSAP</classname>&#39;s
+      no-argument constructor. Depending upon the complexity of your program,
+      however, you may want to instantiate a custom <classname>JSAP</classname>
+      subclass that also takes care of steps 2 and 3 (described below) during
+      the construction process. This approach results in a much
+      &#34;cleaner&#34; main class. Another helpful class is
+      <classname>SimpleJSAP</classname>, which provides on-the-fly declaration
+      of program name, description, and parameters.</para>
+
+      <tip>
+        <para>If you have a complicated command line configuration, create
+        your own subclass of <classname>JSAP</classname> and override its
+        constructor so it can initialize itself. This keeps your main class
+        uncluttered.</para>
+      </tip>
+
+      <para>As of version 2.0, there is an experimental mechanism to load a
+      fully configured JSAP from a simple XML file. See <link linkend="XML">this
+      section</link> for details.</para>
+    </sect1>
+
+    <sect1>
+      <title>Defining your program&#39;s parameters.</title>
+
+      <para>As described above in the Vocabulary section, there are four types
+      of parameters you can define: <classname>Switches</classname>,
+      <classname>FlaggedOptions</classname>, <classname>UnflaggedOptions</classname>,
+      and <classname>QualifiedSwitches</classname>. When you define a
+      parameter, you tell <classname>JSAP</classname> what flags (if any) it
+      uses, what its default values are, whether it is required, what its ID
+      is, and other relevant information. See the individual sections below
+      for each type of parameter for details. If you&#39;re using
+      <classname>SimpleJSAP</classname>, parameters are usually declared as an
+      array in the constructor.</para>
+    </sect1>
+
+    <sect1>
+      <title>Registering your parameters with JSAP.</title>
+
+      <para>Each parameter you define must be registered with
+      <classname>JSAP</classname> via its <methodname>registerParameter()</methodname>
+      method. When a parameter is registered, its properties (flags, etc.)
+      cannot be modified; to modify them, you must first unregister them from
+      <classname>JSAP</classname>, and register them again once modified.
+      Registration can throw an exception if the parameter to be registered
+      conflicts with any other registered parameters (for example, if they use
+      the same flags, or have the same ID). If you&#39;re using
+      <classname>SimpleJSAP</classname>, parameters passed as an argument to
+      the constructor are registered for you.</para>
+    </sect1>
+
+    <sect1>
+      <title>Parsing the command line.</title>
+
+      <para>The <classname>JSAP</classname> object provides two
+      <methodname>parse()</methodname> methods to parse a command line. The
+      first takes an array of <classname>String</classname>s as its only
+      parameter; in most uses of <classname>JSAP</classname>, this will simply
+      be the <varname>args[]</varname> array supplied by the JVM to your
+      <methodname>main()</methodname> method.</para>
+
+      <para>The second <methodname>parse()</methodname> method takes a single
+      <classname>String</classname> as its only parameter. This method first
+      tokenizes the <classname>String</classname> into an array, much like the
+      operating system does for the JVM in providing your
+      <methodname>main()</methodname> method with the <varname>args[]</varname>
+      array, then calls the <methodname>parse(String[])</methodname> method
+      described above.</para>
+
+      <para>Both of these methods return a <classname>JSAPResult</classname>
+      object encapsulating the parsed command line.</para>
+
+      <para><classname>SimpleJSAP</classname> is a subclass of
+      <classname>JSAP</classname>, and works analogously: however, if an error
+      is detected, or if the user specified <literal>--help</literal>, a full
+      usage and help message is printed automatically. You can learn whether
+      the message has been printed or not by invoking the method
+      <methodname>messagePrinted()</methodname> on the <classname>SimpleJSAP</classname>
+      instance just after parsing: if it returns true, you shoud usually
+      terminate the program execution.</para>
+    </sect1>
+
+    <sect1>
+      <title>Using the JSAPResult</title>
+
+      <para>The result of <methodname>JSAP.parse()</methodname> is a
+      <classname>JSAPResult</classname> object. This contains all of the
+      values for each command line parameter. There are a large number of
+      accessor methods available for reading the values:
+      <methodname>getString()</methodname>, <methodname>getBoolean()</methodname>,
+      <methodname>getInteger()</methodname>, <methodname>getInetAddress()</methodname>,
+      <methodname>getColor()</methodname>, ...far too many to include here,
+      including <classname>Iterator</classname>s and arrays for reading
+      multivalue parameters. The <ulink
+      url="javadoc/com/martiansoftware/jsap/JSAPResult.html">javadocs</ulink>
+      are pretty useful for this class.</para>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title>Short vs. Long Flags</title>
+
+    <para><classname>Switch</classname>es, <classname>FlaggedOption</classname>s,
+    and <classname>QualifiedSwitch</classname>es all require flags. Flags can
+    be short, consisting of a single character and preceded by a single
+    hyphen, or long, consisting of more than one character and preceded by two
+    hyphens. <classname>Switch</classname>es, <classname>FlaggedOption</classname>s,
+    and <classname>QualifiedSwitch</classname>es may use short flags, long
+    flags, or both.</para>
+
+    <para>In general, your program&#39;s most commonly used options should
+    have short flags. Long flags are generally more appropriate for
+    less-frequently used options.</para>
+
+    <para>In order to configure a parameter with no short flag, specify a
+    short flag equal to <constant>JSAP.NO_SHORTFLAG</constant>. In order to
+    configure a parameter with no long flag, specify a long flag equal to
+    <constant>JSAP.NO_LONGFLAG</constant>.</para>
+  </chapter>
+
+  <chapter>
+    <title>Switches</title>
+
+    <para>A <classname>Switch</classname> is just what it sounds like: a
+    setting that is either on or off. If a switch is present on the command
+    line, <methodname>JSAPResult.getBoolean(&#34;yourSwitchID&#34;)</methodname>
+    will return true. Otherwise, it will return false.</para>
+  </chapter>
+
+  <chapter>
+    <title>Flagged Options</title>
+
+    <para>A <classname>FlaggedOption</classname> is a value preceded by either
+    a long or short flag indicating the value&#39;s meaning (see the example
+    in Chapter 2). The <classname>FlaggedOption</classname> class provides a
+    <methodname>setAllowMultipleDeclarations(boolean)</methodname> method that
+    informs <classname>JSAP</classname> whether the <classname>FlaggedOption</classname>
+    may be repeated on the command line. For example, if your program uses a
+    <classname>FlaggedOption</classname> to specify an input file (say, &#34;<command>-i
+    file</command>&#34;), multiple declarations will allow your users to enter
+    &#34;<command>-i file1 -i file2 -i file3 ...</command>&#34;. The multiple
+    values can be accessed through <classname>JSAPResult</classname>&#39;s
+    <methodname>getXXXArray()</methodname> methods.</para>
+  </chapter>
+
+  <chapter>
+    <title>Unflagged Options</title>
+
+    <para><classname>UnflaggedOptions</classname> are values whose meanings
+    are indicated by their position on the command line relative to other
+    <classname>UnflaggedOptions</classname> (see example in Chapter 2).
+    <classname>JSAP</classname> expects <classname>UnflaggedOptions</classname>
+    on the command line in the order in which they were registered with the
+    <classname>JSAP</classname>.</para>
+
+    <para>&#34;Greedy&#34; <classname>UnflaggedOptions</classname> (set via
+    <methodname>UnflaggedOption.setGreedy(boolean)</methodname>) consume all
+    remaining unflagged values from the command line as multiple values.
+    Obviously, your <classname>JSAP</classname> can have only one greedy
+    <classname>UnflaggedOption</classname>, and it must be the last
+    <classname>UnflaggedOption</classname> registered with the
+    <classname>JSAP</classname>.</para>
+  </chapter>
+
+  <chapter>
+    <title>Qualified Switches</title>
+
+    <para>The <classname>QualifiedSwitch</classname> class was introduced in
+    version 1.03 and is currently experimental. <classname>QualifiedSwitch</classname>
+    extends <classname>FlaggedOption</classname>, allowing any behavior you
+    can obtain from that class.</para>
+
+    <para>The benefit provided by <classname>QualifiedSwitch</classname> is
+    that its presence on the command line can be determined via
+    <methodname>JSAPResult.getBoolean(id)</methodname>, and its qualifier
+    values can be obtained via the normal <methodname>JSAPResult.getXXX()</methodname>
+    and <methodname>JSAPResult.getXXXArray()</methodname> methods.</para>
+
+    <note>
+      <para>If you expect a boolean qualifier, <methodname>JSAPResult.getBoolean(id)</methodname>
+      will return an indication of whether the switch was present on the
+      command line rather than the qualifier value. This is overcome by using
+      <methodname>JSAPResult.getBooleanArray(id)</methodname>, which will
+      return an array of only the boolean qualifier values.</para>
+    </note>
+
+    <para><classname>JSAP</classname>&#39;s <classname>QualifiedSwitch</classname>
+    implementation was generously contributed by Klaus-Peter Berg of Germany.</para>
+  </chapter>
+
+  <chapter>
+    <title>Lists</title>
+
+    <para><classname>FlaggedOptions</classname>, <classname>UnflaggedOptions</classname>,
+    and <classname>QualifiedSwitches</classname> may all be declared as
+    &#34;Lists&#34; that accept multiple values separated by a specified
+    character. The default list separator is <constant>java.io.File.pathSeparatorChar</constant>.
+    The <classname>Option</classname>&#39;s <classname>StringParser</classname>
+    will be called once for each list item.</para>
+
+    <para>For example, a <classname>FlaggedOption</classname> &#39;x&#39; with
+    an <classname>IntegerStringParser</classname> can be configured with
+    <methodname>setList(true)</methodname> and <methodname>setListSeparator(&#39;,&#39;)</methodname>.
+    It would then accept options from the command line such as &#34;<command>-x
+    42</command>&#34;, &#34;<command>-x=42,2112</command>&#34;, or &#34;<command>-x
+    3,1,4,1,5,9</command>&#34;. In this example, the values would be obtained
+    from the JSAPResult via <methodname>getIntegerArray()</methodname>.</para>
+  </chapter>
+
+  <chapter>
+    <title>StringParsers</title>
+
+    <para>All <classname>String</classname>-to-<classname>Object</classname>
+    conversions are handled by <classname>StringParser</classname>s. The type
+    of <classname>Object</classname> you want to read from the command line
+    determines which <classname>StringParser</classname> you should use with
+    your <classname>Option</classname>. If you need an <type>int</type>, use
+    <classname>IntegerStringParser</classname>. If you need an
+    <classname>InetAddress</classname>, use <classname>InetAddressStringParser</classname>.
+    <classname>JSAP</classname> comes with quite a few - see the
+    <classname>com.martiansoftware.jsap.stringparsers</classname> package.</para>
+
+    <para>String parsers should be accessed using the factory method
+    <methodname>getParser()</methodname> of the corresponding class: for most
+    classes, the instance returned is a singleton. In that case, the parser is
+    also available as a constant in <classname>JSAP</classname>: for instance,
+    the simplest way to get a parser for integers is <varname>JSAP.INTEGER_PARSER</varname>,
+    but you can also use <methodname>IntegerStringParser.getParser()</methodname>.
+    Calling the factory method is necessary if your parser has parameters
+    (see, e.g., <classname>ForNameStringParser</classname>).</para>
+
+    <para>Of course, you may want to read your own object types from the
+    command line, or at least read a type that <classname>JSAP</classname>
+    doesn&#39;t support out of the box. No problem—just extend
+    com.martiansoftware.jsap.StringParser. The only method you have to
+    implement is:</para>
+
+    <programlisting>public abstract Object parse(String arg) throws com.martiansoftware.jsap.ParseException;</programlisting>
+
+    <para>You can now use your own <classname>StringParser</classname> with
+    any <classname>JSAP</classname> option. <classname>JSAP</classname>
+    won&#39;t have a built-in accessor method for the class of the object
+    you&#39;re returning, so you&#39;ll have to use <methodname>JSAPResult.getObject()</methodname>
+    or <methodname>JSAPResult.getObjectArray()</methodname> and re-cast the
+    result to make use of it.</para>
+  </chapter>
+
+  <chapter>
+    <title>Handling Errors</title>
+
+    <para>Users can botch program input in more ways than you could ever
+    imagine. To detect an error, check <methodname>JSAPResult.success()</methodname>
+    after parsing the command line. It will return false if there were any
+    problems.</para>
+
+    <para>Once you detect a problem, you have a number of options:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Display program usage (see <classname>HelloWorld_5</classname>
+        example)</para>
+      </listitem>
+
+      <listitem>
+        <para>Display help information (see <classname>HelloWorld_6</classname>
+        example)</para>
+      </listitem>
+
+      <listitem>
+        <para>Display messages specific to the user&#39;s errors (see
+        <classname>HelloWorld_7</classname> example)</para>
+      </listitem>
+
+      <listitem>
+        <para>Obtain a list of parameter IDs for the problematic items through
+        <methodname>JSAPResult.getBadParameterIDIterator()</methodname>. Then
+        obtain the individual exceptions for each ID through
+        <methodname>JSAPResult.getExceptionIterator(String id)</methodname>
+        and related methods. After that, you&#39;re on your own.</para>
+      </listitem>
+
+      <listitem>
+        <para>Any combination of the above.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>If you have used <classname>SimpleJSAP</classname> error handling is
+    largely simplified, as it will be handled automatically. Remember just to
+    call <methodname>messagePrinted()</methodname> after parsing and take
+    appropriate action.</para>
+  </chapter>
+
+  <chapter>
+    <title>DefaultSources and Configuration Files</title>
+
+    <para>Default program behavior can be configured in one or more files that
+    the command line merely overrides. <classname>JSAP</classname> provides a
+    <methodname>registerDefaultSource(DefaultSource)</methodname> method to
+    support this. At the time of this writing, the only concrete
+    implementation of <classname>DefaultSource</classname> is
+    <classname>PropertyDefaultSource</classname>, which reads files in
+    <classname>java.util.Properties</classname> format.</para>
+
+    <para>Multiple <classname>DefaultSource</classname>s may be registered
+    with a <classname>JSAP</classname>. When a default value is sought, the
+    <classname>DefaultSource</classname>s are checked in the order in which
+    they were registered. The first default value encountered by
+    <classname>JSAP</classname> is used.</para>
+
+    <sect1>
+      <title>PropertyDefaultSource</title>
+
+      <para><classname>PropertyDefaultSource</classname> reads default values
+      from text files consisting of zero or more lines of
+      &#34;key=value&#34;-type assignments. Property names may be parameter
+      IDs, long flags, or short flags for the parameters they address.
+      <classname>JSAP</classname> interprets them in that order (ID, then long
+      flag, then short flag).</para>
+
+      <para>When you create a <classname>PropertyDefaultSource</classname>,
+      you can tell it not to throw <classname>Exceptions</classname>. This
+      allows you to specify a number of possible locations for files that
+      don&#39;t have to exist.</para>
+
+      <para>A typical order in which to register <classname>PropertyDefaultSources</classname>
+      is:<orderedlist><listitem><para><filename>.yourprogramname</filename> in
+      the user&#39;s home directory (obtained via <classname>System</classname>
+      properties)</para></listitem><listitem><para><filename>/etc/yourprogramname.conf</filename>
+      on *nix systems</para></listitem><listitem><para><filename>$YOURPROGRAM_HOME/yourprogramname.conf</filename>
+      if your program makes use of an environment variable to point to its
+      home directory</para></listitem></orderedlist></para>
+
+      <note>
+        <para>If you have any suggestions for a search order example for
+        Windows or Mac, please let me know.</para>
+      </note>
+
+      <warning>
+        <para><classname>PropertyDefaultSource</classname> has not yet been
+        tested with <classname>QualifiedSwitches</classname>; odds are it
+        won&#39;t work as you expect.</para>
+      </warning>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title><anchor id="XML" />Loading JSAP Configurations at Runtime with XML</title>
+
+    <caution>
+      <para>As of v2.0 this feature should be considered experimental.</para>
+    </caution>
+
+    <para>In order to keep your program source free of clutter and to support
+    a large number of possible command line syntaxes, <classname>JSAP</classname>
+    provides a means to load configurations from XML sources at run time. A
+    new contructor with the signature <function>JSAP(<classname>URL</classname>
+    xmlJSAPSource)</function> has been introduced to support this. It is now
+    very easy to store a number of <classname>JSAP</classname> configurations
+    in XML files in the same <filename>.jar</filename> as your application.</para>
+
+    <note>
+      <para>This feature requires the <classname>XStream</classname>
+      <filename>.jar</filename> from <ulink url="http://xstream.codehaus.org">http://xstream.codehaus.org</ulink>.
+      <classname>XStream</classname> is an excellent library that provides a
+      simple means to map objects to/from XML. It is made available under a
+      <ulink url="http://xstream.codehaus.org/license.html">BSD-style license</ulink>.</para>
+
+      <para>Although a <filename>.jar</filename> is available with
+      <classname>JSAP</classname>, <classname>XStream</classname> is in no way
+      affiliated with Martian Software or the <classname>JSAP</classname>
+      project. Furthermore, you&#39;re virtually guaranteed a more up-to-date
+      version of the <filename>.jar</filename> if you go straight to their
+      website. As a bonus, codehaus hosts a variety of other great projects
+      worth checking out.</para>
+    </note>
+
+    <para>The XML syntax for <classname>JSAP</classname> configurations is
+    designed to closely mirror the sequence of function calls required to
+    manually instantiate a <classname>JSAP</classname>.</para>
+
+    <tip>
+      <para>An Eclipse plug-in for editing <classname>JSAP</classname> XML
+      files would be <emphasis>very</emphasis> cool. If you&#39;re interested
+      in writing one, let me know!</para>
+    </tip>
+
+    <para>The following example is a reimplementation of the <ulink
+    url="ch03s08.html"><link linkend="HelloWorld_8"><olink><ulink url="???"><link
+    linkend="HelloWorld_8">HelloWorld_8</link></ulink></olink></link></ulink>
+    example found earlier in this document.</para>
+
+    <programlisting>@Manual_HelloWorld_9_jsap@</programlisting>
+
+    <programlisting>@Manual_HelloWorld_9@</programlisting>
+
+    <screen>@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_9 -n 2 --verbose Zoidberg@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_9 --verbose:de Farnsworth@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_9 -v:de,en Branigan@@
+
+@@rundoc:java com.martiansoftware.jsap.examples.Manual_HelloWorld_9 Horrible_Gelatanous_Blob@@
+</screen>
+
+    <para></para>
+  </chapter>
+
+  <chapter>
+    <title>Contributors</title>
+
+    <para>JSAP started out as a one-person project, but has since grown thanks
+    to code and idea contributions from its users. I hope the following is a
+    complete list. Please let me know if I&#39;m leaving anyone out.<variablelist><varlistentry><term>Klaus-Peter
+    Berg</term><listitem><para>Contributed the <classname>QualifiedSwitch</classname>
+    and <classname>EnumeratedStringParser</classname> classes, plus a few bug
+    fixes.</para></listitem></varlistentry><varlistentry><term>Andreas
+    Hochsteger</term><listitem><para>Suggested the ability to override the use
+    of the ID in automatically-generated usage information.</para></listitem></varlistentry><varlistentry><term>Mark
+    Hopkins</term><listitem><para>Pointed out a few bugs in the Ant task and
+    provided solutions (the best kind of bug report there is!)</para></listitem></varlistentry><varlistentry><term>Edward
+    Glen</term><listitem><para>Provided the <classname>FileStringParser</classname>
+    class.</para></listitem></varlistentry><varlistentry><term>Sebastiano
+    Vigna</term><listitem><para>Provided the vast majority of bug fixes, new
+    features, and associated documentation bringing JSAP to version 2.0! See
+    the <ulink url="http://www.martiansoftware.com/jsap/changelog.html">v2.0
+    changelog</ulink>.</para></listitem></varlistentry></variablelist></para>
+  </chapter>
+
+  <chapter>
+    <title>Reporting Problems</title>
+
+    <para>Please report any bugs and request new features via <ulink
+    url="http://jira.martiansoftware.com/browse/JSAP">http://jira.martiansoftware.com/browse/JSAP</ulink>.</para>
+  </chapter>
+</book>

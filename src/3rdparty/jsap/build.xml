@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+==========================================================================
+
+JSAP build file
+
+Author:
+ Marty Lamb
+ http://www.martiansoftware.com/contact.html
+
+Legal:
+ Copyright (c) 2002-2006, Martian Software, Inc.
+ This file is made available under the LGPL as described in the accompanying
+ LICENSE.TXT file.
+
+==============================================================================
+ 
+--> 
+<project basedir="." default="help" name="jsap">
+
+
+
+	<!-- PROPERTIES ***************************************************************************************** -->
+
+	<!-- Basics -->
+   	<property name="name" value="JSAP" />
+    <property name="version" value="2.1"/>
+    <property name="year" value="2002-2006"/>
+
+	<!-- Documentation -->
+	<property name="j2se.apiurl" value="http://java.sun.com/j2se/1.4/docs/api/"/>
+	<property name="xstream.apiurl" value="http://xstream.codehaus.org/javadoc/"/>
+  
+	<!-- Directories -->
+	<property name="buildfile" value="build.xml"/>
+    <property name="src" value="src"/>
+    <property name="javasrc" value="${src}/java"/>
+    <property name="build" value="build"/>
+    <property name="doc" value="doc"/>
+    <property name="javadoc" value="${doc}/javadoc"/>
+	<property name="javadoc.tmp.src" value="${javadoc}/tmpsrc"/>
+    <property name="dist" value="dist"/>
+    <property name="lib" value="lib"/>
+	
+	<!-- Special Tasks -->
+	<taskdef
+    	name="snip"
+     	classname="com.martiansoftware.snip.Snip" 
+     	classpath="${lib}/snip-0.11.jar"/>
+
+	<taskdef
+    	name="rundoc"
+     	classname="com.martiansoftware.rundoc.RunDoc" 
+     	classpath="${lib}/rundoc-0.11.jar"/>
+
+	<!-- Special Files -->
+    <property name="testFiles" value="**/Test*" />
+    <property name="exampleFiles" value="com/martiansoftware/jsap/examples/" />
+    <property name="manualFiles" value="manual" />
+    <property name="jsapXmlFiles" value="**/*.jsap" />
+	
+    <property name="jarname" value="${name}-${version}.jar" />
+
+	<!-- Administrivia -->
+	<property name="url" value="http://www.martiansoftware.com/jsap" />
+    <property name="copyrightowners" value="Martian Software, Inc." />
+    <property name="copyright.html" value="Copyright &amp;copy; ${year}, ${copyrightowners}.  All Rights Reserved." />
+	<property name="updates.html" value="For the latest version and documentation, please visit &lt;a href='${url}'&gt;${url}&lt;/a&gt;" />
+	<!-- END OF PROPERTIES ********************************************************************************** -->
+
+	<!-- required for build to work in eclipse -->
+	<target name="eclipse-setcompiler" if="eclipse.running">
+	    <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter" />
+	</target>
+
+	<!-- ensure required directories exist -->
+    <target name="init" depends="eclipse-setcompiler">
+        <mkdir dir="${build}"/>
+        <mkdir dir="${javadoc}"/>
+        <mkdir dir="${dist}"/>
+        <!-- Who knows... we might need this for something. -->
+        <tstamp/>
+    </target>
+
+	<!-- jars required for build -->
+	<path id="lib.class.path">
+		<pathelement location="${lib}/ant.jar"/>
+		<pathelement location="${lib}/junit.jar"/>
+		<pathelement location="${lib}/xstream-1.1.2.jar"/>
+	</path>
+
+	<!-- print target list -->
+	<target name="help">
+		<echo>
+
+----------------------------------------------------------------------
+
+Targets:
+
+  clean         - delete all intermediate &amp; compiled files
+  compile-api   - compiles the JSAP API
+  compile-tests - compiles the JSAP API and JUnit test cases
+  compile-all	- compiles the JSAP API, JUnit test cases, and examples
+  test          - compiles the JSAP API and tests it
+  jar           - compiles the JSAP API and builds JSAP.jar
+  javadoc       - compiles the JSAP API and generates javadoc documentation
+  dist			- compiles the JSAP API, builds the jar file, runs javadoc, and
+  				  creates source and binary distribution files.
+
+----------------------------------------------------------------------
+		</echo>
+	</target>
+
+	<!-- delete all intermediate files -->
+    <target name="clean" depends="init">
+        <delete dir="${build}" verbose="true"/>
+        <delete dir="${javadoc}" verbose="true"/>
+        <delete dir="${dist}" verbose="true"/>
+        <mkdir dir="${build}"/>
+        <mkdir dir="${javadoc}"/>
+        <mkdir dir="${dist}"/>
+    </target>
+    
+    <!-- compile the JSAP API -->
+    <target name="compile-api" depends="init" >
+        <javac target="1.4" source="1.4" destdir="${build}" srcdir="${javasrc}">
+<!--        	<exclude name="${testFiles}" />
+        	<exclude name="${exampleFiles}" /> -->
+        	<classpath refid="lib.class.path" />
+        </javac>
+        <copy todir="${build}">
+    		<fileset dir="${javasrc}">
+    			<include name="${jsapXmlFiles}" />
+			</fileset>
+  		</copy>
+    </target>
+
+	<!-- compile the JSAP API and JUnit tests -->
+    <target name="compile-tests" depends="init" >
+        <javac target="1.4" source="1.4" destdir="${build}" srcdir="${javasrc}">
+<!--        	<exclude name="${exampleFiles}" /> -->
+        	<classpath refid="lib.class.path" />
+        </javac>
+        <copy todir="${build}">
+    		<fileset dir="${javasrc}">
+    			<include name="${testConfFiles}" />
+			</fileset>
+  		</copy>
+    </target>
+
+	<!-- compile the JSAP API, JUnit tests, and examples -->
+    <target name="compile-all" depends="init" >
+        <javac target="1.4" source="1.4" destdir="${build}" srcdir="${javasrc}">
+        	<classpath refid="lib.class.path" />
+        </javac>
+    </target>
+
+	<!-- run the JUnit tests -->
+	<target name="test" depends="compile-tests" >
+        <junit printsummary="on">
+            <test name="com.martiansoftware.jsap.TestAll"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath refid="lib.class.path" />
+            <classpath>
+                <pathelement location="${build}"/>
+            </classpath>
+        </junit>
+    </target>
+
+	<!-- make the jar -->
+    <target name="jar" depends="clean,test">
+        <mkdir dir="${dist}"/>
+        <jar basedir="${build}" jarfile="${dist}/${jarname}">
+        	<exclude name="${testFiles}" />
+        	<exclude name="${exampleFiles}" />
+        	<exclude name="${manualFiles}" />
+        </jar>
+    </target> 
+
+	<!-- generate javadocs -->
+    <target name="javadoc" depends="compile-api">
+    	<delete dir="${javadoc}"/>
+        <mkdir dir="${javadoc}"/>
+
+        <javadoc 
+        	public="true" 
+        	destdir="${javadoc}" 
+        	sourcepath="${javasrc}" 
+        	packagenames="com.martiansoftware.*"
+        	windowtitle="JSAP: the Java Simple Argument Parser"
+        	classpathref="lib.class.path">
+        	
+			<link href="${j2se.apiurl}"/>
+			<link href="${xstream.apiurl}"/>
+			<bottom>${copyright.html}&lt;br&gt;${updates.html}</bottom>
+			
+        </javadoc>
+    </target>
+
+	<!-- generate manual -->
+	<target name="manual" depends="compile-all">
+		<snip xmlsafe="true">
+     		<fileset dir="${javasrc}" includes="**/*.java" />
+     		<fileset dir="${javasrc}" includes="**/*.jsap" />
+ 		</snip>
+ 		<mkdir dir="${build}/manual"/>
+		<copy encoding="ISO-8859-1" outputencoding="ISO-8859-1" overwrite="true" verbose="true" file="${src}/doc/manual.xml" todir="${build}/manual">
+			<filterset>
+    			<filter token="Manual_HelloWorld_1" value="${snip.Manual_HelloWorld_1}"/>
+    			<filter token="Manual_HelloWorld_2" value="${snip.Manual_HelloWorld_2}"/>
+    			<filter token="Manual_HelloWorld_3" value="${snip.Manual_HelloWorld_3}"/>
+    			<filter token="Manual_HelloWorld_4" value="${snip.Manual_HelloWorld_4}"/>
+    			<filter token="Manual_HelloWorld_5" value="${snip.Manual_HelloWorld_5}"/>
+    			<filter token="Manual_HelloWorld_6" value="${snip.Manual_HelloWorld_6}"/>
+    			<filter token="Manual_HelloWorld_7" value="${snip.Manual_HelloWorld_7}"/>
+    			<filter token="Manual_HelloWorld_8" value="${snip.Manual_HelloWorld_8}"/>
+        		<filter token="Manual_HelloWorld_9" value="${snip.Manual_HelloWorld_9}"/>
+        		<filter token="Manual_HelloWorld_Simple" value="${snip.Manual_HelloWorld_Simple}"/>
+        		<filter token="Manual_HelloWorld_9_jsap" value="${snip.Manual_HelloWorld_9_jsap}"/>
+  			</filterset>
+  		</copy>
+
+ 		<rundoc prompt="[mlamb@morbo]$ " format="docbook">
+       		<fileset file="${build}/manual/manual.xml"/>
+       		<env key="CLASSPATH" value="${build}:${lib}/xstream-1.1.2.jar"/>
+ 			<env key="LANG" value="en_US.iso88591"/>
+		</rundoc>
+
+		<!-- anyone want to write a non-platform-specific task to do this? -->
+ 		<exec dir="${build}/manual" executable="xmlto">
+ 			<arg value="html"/>
+ 			<arg value="manual.xml"/>
+ 		</exec>
+		
+  		<replace encoding="ISO-8859-1" dir="${build}/manual" includes="*.html"
+			token="&lt;head&gt;"
+			value="&lt;head&gt;&lt;link rel='stylesheet' type='text/css' href='manual.css'/&gt;" />
+			
+  		<replace encoding="ISO-8859-1" dir="${build}/manual" includes="*.html"
+			token="&#x09;"
+			value="    " />
+			
+  		<replace encoding="ISO-8859-1" dir="${build}/manual" includes="*.html"
+			token="&#xc2;"
+			value="" />
+
+  			<replace encoding="ISO-8859-1" dir="${build}/manual" includes="*.html"
+			token="&#160;"
+			value="&amp;nbsp;" />
+
+		<copy overwrite="true" verbose="true" todir="${doc}">
+			<fileset dir="${build}/manual" includes="*.html"/>
+		</copy>
+		<copy overwrite="true" verbose="true" file="${src}/doc/manual.css" todir="${doc}"/>
+ 		
+	</target>
+	
+	<!-- build distributable files -->
+	<target name="dist" depends="jar,javadoc,manual">
+	
+		<!-- copy files to a temp directory for packaging -->
+		<property name="distimage" value="${dist}/${name}-${version}"/>
+		<property name="distimage.short" value="${name}-${version}"/>
+		<delete dir="${distimage}" />
+		<mkdir dir="${distimage}" />
+		<copy todir="${distimage}" file="${buildfile}" />
+		<copy todir="${distimage}" file="LICENSE.TXT" />
+		<copy todir="${distimage}" file="src/doc/CHANGELOG.TXT" />
+
+		<!-- copy source files into temp directory -->
+		<mkdir dir="${distimage}/${src}"/>
+		<copy todir="${distimage}/${src}">
+			<fileset dir="${src}" />
+		</copy>
+
+		<!-- copy jar files into temp directory -->
+		<mkdir dir="${distimage}/${lib}"/>
+		<copy todir="${distimage}/${lib}" file="${dist}/${jarname}" />
+		<copy todir="${distimage}/${lib}">
+			<fileset dir="${lib}" />
+		</copy>
+		
+		<!-- copy documentation into temp directory -->
+		<mkdir dir="${distimage}/${doc}"/>
+		<copy todir="${distimage}/${doc}">
+			<fileset dir="${doc}">
+				<exclude name="**/src/**"/>
+			</fileset>
+		</copy>
+
+		<!-- make the source zip file -->
+		<zip destfile="${dist}/${name}-${version}-src.zip" basedir="${dist}" includes="${distimage.short}/**" update="false" />
+		<tar tarfile="${dist}/${name}-${version}-src.tar" basedir="${dist}" includes="${distimage.short}/**"/>
+		<gzip zipfile="${dist}/${name}-${version}-src.tar.gz" src="${dist}/${name}-${version}-src.tar"/>
+		
+		<!-- delete the buildfile, source files and development libaries from the temp directory. -->
+		<!-- the binary distribution file should just contain the jar and the documentation. -->
+		<delete file="${distimage}/${buildfile}" />
+		<delete dir="${distimage}/${src}" />
+		<delete>
+			<fileset dir="${distimage}/${lib}" excludes="${jarname}" />
+		</delete>
+
+		<!-- make the binary zip file -->
+		<zip destfile="${dist}/${name}-${version}.zip" basedir="${dist}" includes="${distimage.short}/**" update="false" />
+		<tar tarfile="${dist}/${name}-${version}.tar" basedir="${dist}" includes="${distimage.short}/**"/>
+		<gzip zipfile="${dist}/${name}-${version}.tar.gz" src="${distimage}.tar"/>
+
+		<!-- delete the tar files that are now gzipped -->
+		<delete>
+			<fileset dir="${dist}" includes="*.tar" />
+		</delete>
+<!--		<delete dir="${distimage}"/> -->
+	</target>
+
+	<!-- build distributable files from scratch -->
+	<target name="cleandist" depends="clean, dist">
+	</target>
+	
+</project>

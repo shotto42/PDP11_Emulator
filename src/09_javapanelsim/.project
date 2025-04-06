@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>09_panelsim</name>
+	<comment></comment>
+	<projects>
+		<project>07.0_blinkenlight_api</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>3rdparty</name>
+			<type>2</type>
+			<location>/home/joerg/retrocmp/blinkenbone/projects/3rdpartyxx</location>
+		</link>
+		<link>
+			<name>blinkenlight_api_java</name>
+			<type>2</type>
+			<location>/home/joerg/retrocmp/blinkenbone/projects/07.0_blinkenlight_api/java</location>
+		</link>
+		<link>
+			<name>rpcgen_java</name>
+			<type>2</type>
+			<location>/home/joerg/retrocmp/blinkenbone/projects/07.0_blinkenlight_api/rpcgen_javaxx</location>
+		</link>
+	</linkedResources>
+	<filteredResources>
+		<filter>
+			<id>1469602973002</id>
+			<name></name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.csv</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
+</projectDescription>

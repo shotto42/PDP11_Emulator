@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<!--
+  $Header: /cvsroot/remotetea/remotetea/build.xml,v 1.6 2007/05/29 19:45:14 haraldalbrecht Exp $
+  
+  build.xml - contains the ANT rules for building Remote Tea
+  
+  -->
+
+<project name="Remote Tea" default="jar" basedir=".">
+
+	<!-- -->
+	<property name="buildDir" value="classes" />
+	<property name="srcDir" value="src" />
+	<property name="javadocDir" value="javadoc" />
+	<property name="distDir" value="dist" />
+
+	<!-- -->
+	<!-- ** SF patch #943219: add compile target ** -->
+	<!-- Compile classes -->
+	<target name="compile" description="compile classes">
+		<mkdir dir="${buildDir}"/>
+		<javac
+				srcdir="${srcDir}"
+				destdir="${buildDir}"
+				debug="true"
+				deprecation="true"
+				optimize="true">
+		</javac>
+	</target>
+
+	<!-- Generate JAR files:
+	     * oncrpc.jar contains the ONC/RPC client and server functionality,
+	     * jrpcgen.jar contains the x-file protocol compiler,
+	     * jportmap.jar contains an ONC/RPC portmapper including base libraries
+	       (so older JREs have no problems executing it standalone).
+	  -->
+	<!-- ** SF patch #943219: add compile target / compile dependency ** -->
+	<target name="jar" description="generate jar files" depends="compile">
+		<delete file="${buildDir}/oncrpc.jar"/>
+		<jar 
+				jarfile="${buildDir}/oncrpc.jar"
+				basedir="${buildDir}"
+				includes="org/acplt/oncrpc/*.class,org/acplt/oncrpc/server/*.class"
+		/>
+		<delete file="${buildDir}/jrpcgen.jar"/>
+		<!-- ** SF patch #943215: include Ant task with jrpcgen.jar ** -->
+		<jar
+				jarfile="${buildDir}/jrpcgen.jar"
+				basedir="${buildDir}"
+				includes="org/acplt/oncrpc/apps/jrpcgen/**/*.class,org/acplt/oncrpc/ant/*.class">
+			<manifest>
+				<attribute name="Main-Class" value="org.acplt.oncrpc.apps.jrpcgen.jrpcgen"/>
+			</manifest>
+		</jar>
+		<delete file="${buildDir}/portmap.jar"/>
+		<jar
+				jarfile="${buildDir}/portmap.jar"
+				basedir="${buildDir}"
+				includes="org/acplt/oncrpc/*.class,org/acplt/oncrpc/server/*.class,org/acplt/oncrpc/apps/jportmap/*.class">
+			<manifest>
+				<attribute name="Main-Class" value="org.acplt.oncrpc.apps.jportmap.jportmap
+"/>
+			</manifest>
+		</jar>
+	</target>
+	
+	<!-- Generate JavaDoc -->
+	<target name="javadoc" description="generate JavaDoc documentation files">
+		<delete dir="${javadocDir}"/>
+		<mkdir dir="${javadocDir}" />
+		<javadoc
+				sourcepath="${srcDir}"
+				destdir="${javadocDir}"
+				classpath="${buildDir}"
+				private="true"
+				author="on">
+			<package name="org.acplt.oncrpc" />
+			<package name="org.acplt.oncrpc.server" />
+			<package name="org.acplt.oncrpc.web" />
+			<package name="org.acplt.oncrpc.apps.jrpcgen" />
+			<package name="org.acplt.oncrpc.apps.jportmap" />
+			<package name="org.acplt.oncrpc.apps.ant" />
+		</javadoc>
+	</target>
+
+	<!-- Generate SF file packages -->
+	<target name="sf" description="generate SF file packages"
+		    depends="jar,javadoc">
+		<mkdir dir="${distDir}"/>
+		<!-- binary plus documentation distribution -->
+		<zip zipfile="${distDir}/remotetea-bin-doc.zip">
+			<zipfileset dir="." prefix="remotetea/">
+				<include name="${buildDir}/*.jar" />
+				<include name="${javadocDir}/" />
+			</zipfileset>
+			<zipfileset dir="." prefix="remotetea/">
+				<include name="readme.html" />
+				<include name="changelog.html" />
+				<include name="docstyle.css" />
+				<include name="COPYING.LIB" />
+				<include name="build.xml" />
+			</zipfileset>
+		</zip>
+		<!-- source only distribution -->
+		<zip zipfile="${distDir}/remotetea-src.zip">
+			<zipfileset dir="." prefix="remotetea/">
+				<include name=".project" />
+				<include name=".classpath" />
+				<include name="readme.html" />
+				<include name="changelog.html" />
+				<include name="docstyle.css" />
+				<include name="COPYING.LIB" />
+			</zipfileset>
+			<zipfileset dir="." prefix="remotetea/">
+				<include name="${srcDir}/" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- compile Jrpcgen test example and compile resulting Java files -->
+	<target name="jrpcgen-test" description="run jrpcgen test">
+		<echo>Cleaning up example mess...</echo>
+		<delete><!-- make a fresh start so we don't get bitten by damaged example source code -->
+			<fileset dir="${srcDir}/tests/org/acplt/oncrpc/jrpcgen"
+				     includes="*.java"
+			         excludes="demoClientExample.java demoServer.java"/>
+		</delete>
+		<echo>Compiling Jrpcgen protocol compiler...</echo>
+		<antcall target="compile"></antcall>
+		<echo>Running Jrpcgen x protocol compiler on demo.x...</echo>
+		<java classname="org.acplt.oncrpc.apps.jrpcgen.jrpcgen"
+		      classpath="${buildDir}"
+			  dir="${srcDir}/tests/org/acplt/oncrpc/jrpcgen"
+			  fork="yes">
+			<arg value="-verbose"/>
+			<arg value="-ser"/>
+			<arg value="-bean"/>
+			<arg value="-p"/>
+			<arg value="tests.org.acplt.oncrpc.jrpcgen"/>
+			<arg value="-nobackup"/>
+			<arg value="demo.x"/>
+		</java>
+		<echo>Running Jrpcgen x protocol compiler on demo2.x...</echo>
+		<java classname="org.acplt.oncrpc.apps.jrpcgen.jrpcgen"
+		      classpath="${buildDir}"
+			  dir="${srcDir}/tests/org/acplt/oncrpc/jrpcgen"
+			  fork="yes">
+			<arg value="-verbose"/>
+			<arg value="-p"/>
+			<arg value="tests.org.acplt.oncrpc.jrpcgen"/>
+			<arg value="-nobackup"/>
+			<arg value="demo2.x"/>
+		</java>
+		<echo>Compiling example mess...</echo>
+		<javac
+				srcdir="${srcDir}/tests/org/acplt/oncrpc/jrpcgen"
+				destdir="${buildDir}"
+				debug="true"
+				deprecation="true"
+				optimize="true">
+		</javac>
+		<echo>Succeeded.</echo>
+	</target>
+	
+</project>
+
+<!-- End of build.xml -->

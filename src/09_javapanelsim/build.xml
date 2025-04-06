@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="jar" name="Create Classes and Jar for Project 09panelsim">
+    <!--Plain jar with blinkenbone classes and resources-->
+    <!--Joerg Hoppe, 2016-->
+    <!--ANT 1.7 is required-->
+    <!--Start specific app like
+            java -classpath panelsim_all.jar blinkenbone.panelsim.panelsimKI10.PanelsimKI10_app
+        -->
+
+    <!-- project dir one level above, should resolve to ~/retrocmp/blinkenbone/projects -->
+    <property name="dir.root" value=".."/>
+    <property name="dir.project" value="${dir.root}/09_javapanelsim"/>
+
+    <target name="init">
+            <delete dir="${dir.project}/bin" />
+            <mkdir dir="${dir.project}/bin" />
+     </target>
+
+     <path id="otherjars">
+            <fileset file="${dir.root}/3rdparty/remotetea/classes/jrpcgen.jar"/>
+            <fileset file="${dir.root}/3rdparty/remotetea/classes/oncrpc.jar"/>
+            <fileset file="${dir.root}/3rdparty/remotetea/classes/portmap.jar"/>
+            <fileset file="${dir.root}/3rdparty/jsap/lib/JSAP-2.1.jar"/>
+        </path>
+
+        <!-- Compile for JDK 1.7 -->
+     <target name="compile" depends="init">
+        <!-- The Blinkenlight API-->
+        <javac srcdir="${dir.root}/07.0_blinkenlight_api/java"
+                destdir="${dir.project}/bin"
+                target="1.8" source="1.8" >
+                <classpath refid="otherjars"/>
+        </javac>
+
+        <!-- The panel simulations-->
+        <javac srcdir="${dir.project}/src"
+                destdir="${dir.project}/bin"
+                target="1.8" source="1.8" >
+                <classpath refid="otherjars"/>
+        </javac>
+     </target>
+
+    <target name="jar" depends="compile">
+        <jar destfile="${dir.project}/panelsim_all.jar">
+            <fileset dir="${dir.project}/bin"/>
+            <fileset dir="${dir.project}/resources"/>
+            <zipfileset src="${dir.root}/3rdparty/remotetea/classes/jrpcgen.jar"/>
+            <zipfileset src="${dir.root}/3rdparty/remotetea/classes/oncrpc.jar"/>
+            <zipfileset src="${dir.root}/3rdparty/remotetea/classes/portmap.jar"/>
+            <zipfileset src="${dir.root}/3rdparty/jsap/lib/JSAP-2.1.jar"/>
+        </jar>
+    </target>
+</project>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="remotetea/" kind="src" path="3rdparty"/>
+	<classpathentry kind="src" path="blinkenlight_api_java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/home/joerg/retrocmp/blinkenbone/projects/3rdparty/remotetea/classes/jrpcgen.jar"/>
+	<classpathentry kind="lib" path="/home/joerg/retrocmp/blinkenbone/projects/3rdparty/remotetea/classes/oncrpc.jar"/>
+	<classpathentry kind="lib" path="/home/joerg/retrocmp/blinkenbone/projects/3rdparty/remotetea/classes/portmap.jar"/>
+	<classpathentry kind="lib" path="resources"/>
+	<classpathentry kind="lib" path="/home/joerg/retrocmp/blinkenbone/projects/3rdparty/jsap/lib/JSAP-2.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

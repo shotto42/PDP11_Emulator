@@ -42,7 +42,7 @@ $ ./start_pidp11.sh <operating system>		# Start the emulator (e.g. using the 211
 $ sudo raspi-config
 Interface Options -> SSH			# Activate SSH when the system is used without keyboard and HDMI monitor
 Interface Options -> VNC			# Activate VNC when the Real VNC Viewer [22] is used to access the Raspberry PI desktop
-Advanced Options -> A1 Expand Filesystem	# Make shure that the whole SD card is used for the Rasbian OS
+Advanced Options -> A1 Expand Filesystem	# Make sure that the whole SD card is used for the Rasbian OS
 Advanced Options -> A6 Wayland -> W1 X11	# Activate X11 to enable the app GUI forwarding via SSH (e.g. MobaXterm [21])
 ```
 

@@ -19,7 +19,7 @@ The PDP11/70 variant has been launched in 1975 running a 5 MHz CPU including an 
 - Raspberry PI (tested on a model 2 running a 32Bit Rasbian)  
 
 
-## Download source code from Githun and installation
+## Download source code from Github and installation
 ```
 $ git clone "https://github.com/shotto42/PDP11_Emulator"
 $ cd pidp11/src					# Go into the src directory

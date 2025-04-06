@@ -113,7 +113,7 @@ $ sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/rpcbind
 
 ## References
 [1]  https://hotto.de/software-hardware/pdp11-70-emulator/  
-[2]  https://github.com/shotto42/PDP11_Emulator
+[2]  https://github.com/shotto42/PDP11_Emulator  
 [3]  https://retrocmp.com/projects/blinkenbone/simulated-panels  
 [4]  https://github.com/j-hoppe/BlinkenBone  
 [5]  https://obsolescence.dev/index.html  

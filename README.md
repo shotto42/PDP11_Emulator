@@ -1,5 +1,5 @@
 # PDP11/70 Emulation
-https://hotto.de
+https://hotto.de/software-hardware/pdp11-70-emulator/
 
 <img src="https://hotto.de/wp-content/uploads/2025/04/PDP1170_FrontPanel.jpg" width="500" />  
 

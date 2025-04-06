@@ -19,9 +19,9 @@ The PDP11/70 variant has been launched in 1975 running a 5 MHz CPU including an 
 - Raspberry PI (tested on a model 2 running a 32Bit Rasbian)  
 
 
-## Download and Installation
+## Download source code from Githun and installation
 ```
-$ git clone ""        # Download source code from Github
+$ git clone "https://github.com/shotto42/PDP11_Emulator"
 $ cd pidp11/src					# Go into the src directory
 $ ./install_dependencies.sh			# Install all required dependencies
 $ ./install_pdp11_operating_systems.sh		# Install the operating systems curated by Oscar Vermeulen
@@ -56,7 +56,6 @@ Advanced Options -> A6 Wayland -> W1 X11	# Activate X11 to enable the app GUI fo
 <video width="500" controls>
   <source src="https://hotto.de/wp-content/uploads/2025/04/PDP1170_211BSD.webm" type="video/webm">  
 </video>
-<br/><br/>
 
 **Remote Raspberry PI access via MobaXterm [21] on Windows 11 using SSH and X11 forwarding**
 <img src="https://hotto.de/wp-content/uploads/2025/04/PDP1170_211BSD_MobaXterm.jpg" width="500"/>

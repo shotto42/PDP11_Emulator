@@ -33,7 +33,7 @@ $ ./make_panel.sh				# Compile the JAVA based PDP panels
 ## Run the PDP11/70 Panel and the SIMH Emulator
 ```
 $ cd pidp11					# Go into the main directory
-$ ./start_panel.sh				# The PDP11/70 panel needs to be startet before the emulator
+$ ./start_panel.sh				# The PDP11/70 panel needs to be started before the emulator
 $ ./start_pdp11.sh <operating system>		# Start the emulator (e.g. using the 211bsd operating system)
 ```
 

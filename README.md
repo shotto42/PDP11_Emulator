@@ -34,7 +34,7 @@ $ ./make_panel.sh				# Compile the JAVA based PDP panels
 ```
 $ cd pidp11					# Go into the main directory
 $ ./start_panel.sh				# The PDP11/70 panel needs to be startet before the emulator
-$ ./start_pidp11.sh <operating system>		# Start the emulator (e.g. using the 211bsd operating system)
+$ ./start_pdp11.sh <operating system>		# Start the emulator (e.g. using the 211bsd operating system)
 ```
 
 ## Raspberry PI configuration to establish a remote connection
